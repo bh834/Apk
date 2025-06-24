@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LuminaScan - Fast QR Scanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 400px;
+            width: 90%;
+            padding: 2rem;
+            background-color: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #ffffff, #e0e0e0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        .divider {
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0), white, rgba(255, 255, 255, 0));
+            margin: 1.5rem auto;
+        }
+        
+        .scan-btn {
+            background: white;
+            color: #6e8efb;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 1rem;
+        }
+        
+        /* Scanner Page Styles */
+        .scanner-page {
+            display: none;
+            width: 100%;
+            max-width: 400px;
+            padding: 1.5rem;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            text-align: center;
+        }
+        
+        .scanner-instruction {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+        
+        .scanner-view {
+            width: 100%;
+            height: 300px;
+            position: relative;
+            margin-bottom: 1.5rem;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        
+        #qr-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror effect for front camera */
+        }
+        
+        .scanner-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            height: 70%;
+            border: 3px solid rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-sizing: border-box;
+            box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.5);
+        }
+        
+        .scanner-animation {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.8);
+            animation: scanAnimation 2s infinite linear;
+            border-radius: 3px;
+        }
+        
+        @keyframes scanAnimation {
+            0% { top: 10%; }
+            100% { top: 90%; }
+        }
+        
+        .scanner-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+        
+        .scanner-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .scanner-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Result Page Styles */
+        .result-page {
+            display: none;
+            width: 100%;
+            max-width: 400px;
+            padding: 2rem;
+            background-color: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            text-align: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        
+        .result-content {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+            word-break: break-all;
+            font-size: 0.9rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            min-width: 120px;
+        }
+        
+        .copy-btn {
+            background: white;
+            color: #6e8efb;
+        }
+        
+        .visit-btn {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .new-scan-btn {
+            background: #6e8efb;
+            color: white;
+        }
+        
+        .footer {
+            margin-top: 2rem;
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+        
+        #qr-canvas {
+            display: none;
+        }
+        
+        .detection-info {
+            font-size: 0.8rem;
+            margin-top: 1rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <!-- Home Page -->
+    <div class="container" id="home-page">
+        <h1>LuminaScan</h1>
+        <p class="subtitle">Ultra-Fast QR Code Scanning</p>
+        
+        <div class="divider"></div>
+        
+        <button class="scan-btn" id="scan-btn">Start Scanning</button>
+    </div>
+    
+    <!-- Scanner Page -->
+    <div class="scanner-page" id="scanner-page">
+        <p class="scanner-instruction">Point your camera at a QR Code</p>
+        
+        <div class="scanner-view">
+            <video id="qr-video" playsinline></video>
+            <div class="scanner-frame"></div>
+            <div class="scanner-animation"></div>
+        </div>
+        
+        <div class="scanner-controls">
+            <button class="scanner-btn" id="toggle-camera-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M2 12h1m18 0h1m-10-9v1m0 18v1"></path>
+                </svg>
+                Switch Camera
+            </button>
+            <button class="scanner-btn" id="cancel-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                Cancel
+            </button>
+        </div>
+        
+        <p class="detection-info">High-speed detection active</p>
+        <canvas id="qr-canvas"></canvas>
+    </div>
+    
+    <!-- Result Page -->
+    <div class="result-page" id="result-page">
+        <h3 class="result-title">Scan Result</h3>
+        <div class="result-content" id="qr-result"></div>
+        
+        <div class="action-buttons">
+            <button class="action-btn copy-btn" id="copy-btn">Copy</button>
+            <button class="action-btn visit-btn" id="visit-btn">Visit Link</button>
+            <button class="action-btn new-scan-btn" id="new-scan-btn">Scan Again</button>
+        </div>
+    </div>
+    
+    <p class="footer">LuminaScan Pro © 2023</p>
+    
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const homePage = document.getElementById('home-page');
+            const scannerPage = document.getElementById('scanner-page');
+            const resultPage = document.getElementById('result-page');
+            const scanBtn = document.getElementById('scan-btn');
+            const cancelBtn = document.getElementById('cancel-btn');
+            const newScanBtn = document.getElementById('new-scan-btn');
+            const copyBtn = document.getElementById('copy-btn');
+            const visitBtn = document.getElementById('visit-btn');
+            const toggleCameraBtn = document.getElementById('toggle-camera-btn');
+            const qrResult = document.getElementById('qr-result');
+            const qrVideo = document.getElementById('qr-video');
+            const qrCanvas = document.getElementById('qr-canvas');
+            
+            // State variables
+            let scanning = false;
+            let stream = null;
+            let currentScanResult = '';
+            let usingFrontCamera = false;
+            let lastScanTime = 0;
+            let scanInterval = 100; // Milliseconds between scans (lower = faster)
+            
+            // Event Listeners
+            scanBtn.addEventListener('click', startScanning);
+            cancelBtn.addEventListener('click', stopScanning);
+            newScanBtn.addEventListener('click', startScanning);
+            toggleCameraBtn.addEventListener('click', toggleCamera);
+            
+            copyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(currentScanResult)
+                    .then(() => {
+                        copyBtn.textContent = 'Copied!';
+                        setTimeout(() => {
+                            copyBtn.textContent = 'Copy';
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy: ', err);
+                    });
+            });
+            
+            visitBtn.addEventListener('click', () => {
+                if (isValidUrl(currentScanResult)) {
+                    window.open(currentScanResult, '_blank');
+                } else {
+                    alert('This is not a valid URL');
+                }
+            });
+            
+            // Functions
+            function startScanning() {
+                homePage.style.display = 'none';
+                resultPage.style.display = 'none';
+                scannerPage.style.display = 'block';
+                
+                const constraints = {
+                    video: { 
+                        facingMode: usingFrontCamera ? "user" : "environment",
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                };
+                
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then(function(s) {
+                        stream = s;
+                        qrVideo.srcObject = stream;
+                        qrVideo.play();
+                        scanning = true;
+                        lastScanTime = 0;
+                        requestAnimationFrame(scan);
+                    })
+                    .catch(function(err) {
+                        console.error("Error accessing camera: ", err);
+                        alert("Could not access the camera. Please make sure you have granted camera permissions.");
+                        stopScanning();
+                    });
+            }
+            
+            function stopScanning() {
+                scanning = false;
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+                scannerPage.style.display = 'none';
+                homePage.style.display = 'block';
+            }
+            
+            function toggleCamera() {
+                usingFrontCamera = !usingFrontCamera;
+                stopScanning();
+                startScanning();
+            }
+            
+            function showResult(result) {
+                currentScanResult = result;
+                qrResult.textContent = result;
+                scannerPage.style.display = 'none';
+                resultPage.style.display = 'block';
+                
+                // Show/hide visit button based on URL validity
+                visitBtn.style.display = isValidUrl(result) ? 'block' : 'none';
+            }
+            
+            function isValidUrl(string) {
+                try {
+                    new URL(string);
+                    return true;
+                } catch (_) {
+                    return false;
+                }
+            }
+            
+            // Optimized scanning function
+            function scan(timestamp) {
+                if (!scanning) return;
+                
+                // Throttle scanning to maintain performance
+                if (timestamp - lastScanTime > scanInterval) {
+                    lastScanTime = timestamp;
+                    
+                    if (qrVideo.readyState === qrVideo.HAVE_ENOUGH_DATA) {
+                        qrCanvas.height = qrVideo.videoHeight;
+                        qrCanvas.width = qrVideo.videoWidth;
+                        
+                        const canvasContext = qrCanvas.getContext('2d', { willReadFrequently: true });
+                        
+                        // Only process the center portion for faster detection
+                        const scanArea = {
+                            x: qrCanvas.width * 0.15,
+                            y: qrCanvas.height * 0.15,
+                            width: qrCanvas.width * 0.7,
+                            height: qrCanvas.height * 0.7
+                        };
+                        
+                        canvasContext.drawImage(
+                            qrVideo, 
+                            scanArea.x, scanArea.y, scanArea.width, scanArea.height,
+                            0, 0, qrCanvas.width, qrCanvas.height
+                        );
+                        
+                        const imageData = canvasContext.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
+                        
+                        try {
+                            const code = jsQR(
+                                imageData.data, 
+                                imageData.width, 
+                                imageData.height, 
+                                {
+                                    inversionAttempts: "dontInvert",
+                                }
+                            );
+                            
+                            if (code) {
+                                stopScanning();
+                                showResult(code.data);
+                                return;
+                            }
+                        } catch (e) {
+                            console.error("QR processing error:", e);
+                        }
+                    }
+                }
+                
+                requestAnimationFrame(scan);
+            }
+        });
+    </script>
+</body>
+</html>

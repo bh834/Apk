@@ -427,19 +427,7 @@
                         
                         const canvasContext = qrCanvas.getContext('2d', { willReadFrequently: true });
                         
-                        // Only process the center portion for faster detection
-                        const scanArea = {
-                            x: qrCanvas.width * 0.15,
-                            y: qrCanvas.height * 0.15,
-                            width: qrCanvas.width * 0.7,
-                            height: qrCanvas.height * 0.7
-                        };
-                        
-                        canvasContext.drawImage(
-                            qrVideo, 
-                            scanArea.x, scanArea.y, scanArea.width, scanArea.height,
-                            0, 0, qrCanvas.width, qrCanvas.height
-                        );
+                        canvasContext.drawImage(qrVideo, 0, 0, qrCanvas.width, qrCanvas.height);
                         
                         const imageData = canvasContext.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
                         

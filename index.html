@@ -34,72 +34,30 @@ video{width:100%;height:100%;object-fit:cover}
 <p class="sub">Fast QR Code Scanner</p><div class="divider"></div>
 <div class="home-actions"><button class="btn primary" id="start">Start Scanning</button></div>
 </section>
-
 <section id="scanner" class="scanner">
 <p class="instruction">Point your camera at a QR code</p>
-<div class="viewport">
-<video id="video" playsinline></video><div class="frame"></div><div class="line"></div>
-</div>
-<div class="controls">
-<button class="btn ghost" id="switch">↻ Switch Camera</button>
-<button class="btn ghost" id="cancel">Cancel</button>
-</div>
+<div class="viewport"><video id="video" playsinline></video><div class="frame"></div><div class="line"></div></div>
+<div class="controls"><button class="btn ghost" id="switch">↻ Switch Camera</button><button class="btn ghost" id="cancel">Cancel</button></div>
 </section>
-
 <section id="result" class="result">
-<h2>Scan Result</h2>
-<div id="output" class="result-content"></div>
-<div class="actions">
-<button class="btn primary" id="copy">Copy</button>
-<button class="btn" id="visit" style="background:#22c55e;color:#fff">Visit Link</button>
-<button class="btn ghost" id="again">Scan Again</button>
-</div>
+<h2>Scan Result</h2><div id="output" class="result-content"></div>
+<div class="actions"><button class="btn primary" id="copy">Copy</button><button class="btn" id="visit" style="background:#22c55e;color:#fff">Visit Link</button><button class="btn ghost" id="again">Scan Again</button></div>
 </section>
-<p class="footer">LuminaScan Pro</p>
-<canvas id="canvas"></canvas>
+<p class="footer">LuminaScan Pro</p><canvas id="canvas"></canvas>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script>
 const home=document.getElementById('home'),scanner=document.getElementById('scanner'),result=document.getElementById('result');
 const start=document.getElementById('start'),cancel=document.getElementById('cancel'),again=document.getElementById('again');
 const sw=document.getElementById('switch'),video=document.getElementById('video'),canvas=document.getElementById('canvas'),output=document.getElementById('output'),copy=document.getElementById('copy'),visit=document.getElementById('visit');
 let stream=null,running=false,front=false,lastResult='';
-
 function validUrl(value){try{new URL(value);return true}catch{return false}}
-function stopCamera(){
- running=false;
- if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
-}
+function stopCamera(){running=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
 function showHome(){stopCamera();scanner.style.display='none';result.style.display='none';home.style.display='block'}
-async function startScan(){
- home.style.display='none';result.style.display='none';scanner.style.display='block';
- stopCamera();
- try{
-  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:front?'user':'environment',width:{ideal:1280},height:{ideal:720}}});
-  video.srcObject=stream;await video.play();running=true;requestAnimationFrame(scan);
- }catch(e){alert('Camera access was denied or is unavailable. Please allow camera permission.');showHome()}
-}
-function showResult(value){
- stopCamera();lastResult=value;output.textContent=value;visit.style.display=validUrl(value)?'inline-block':'none';scanner.style.display='none';result.style.display='block';
-}
-function scan(){
- if(!running)return;
- if(video.readyState>=2){
-  const w=video.videoWidth,h=video.videoHeight;
-  if(w&&h){
-   canvas.width=w;canvas.height=h;
-   const ctx=canvas.getContext('2d',{willReadFrequently:true});
-   ctx.drawImage(video,0,0,w,h);
-   const data=ctx.getImageData(0,0,w,h);
-   const code=jsQR(data.data,data.width,data.height,{inversionAttempts:'attemptBoth'});
-   if(code){showResult(code.data);return}
-  }
- }
- requestAnimationFrame(scan);
-}
-start.onclick=startScan;again.onclick=startScan;cancel.onclick=showHome;
-sw.onclick=()=>{front=!front;startScan()};
+async function startScan(){home.style.display='none';result.style.display='none';scanner.style.display='block';stopCamera();try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:front?'user':'environment',width:{ideal:1280},height:{ideal:720}}});video.srcObject=stream;await video.play();running=true;requestAnimationFrame(scan)}catch(e){alert('Camera access was denied or is unavailable. Please allow camera permission.');showHome()}}
+function showResult(value){stopCamera();lastResult=value;output.textContent=value;visit.style.display=validUrl(value)?'inline-block':'none';scanner.style.display='none';result.style.display='block'}
+function scan(){if(!running)return;if(video.readyState>=2){const w=video.videoWidth,h=video.videoHeight;if(w&&h){canvas.width=w;canvas.height=h;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(video,0,0,w,h);const data=ctx.getImageData(0,0,w,h);const code=jsQR(data.data,data.width,data.height,{inversionAttempts:'attemptBoth'});if(code){showResult(code.data);return}}}requestAnimationFrame(scan)}
+start.onclick=startScan;again.onclick=startScan;cancel.onclick=showHome;sw.onclick=()=>{front=!front;startScan()};
 copy.onclick=async()=>{try{await navigator.clipboard.writeText(lastResult);copy.textContent='Copied!';setTimeout(()=>copy.textContent='Copy',1600)}catch{alert('Could not copy the result.')}};
 visit.onclick=()=>{if(validUrl(lastResult))window.location.href=lastResult};
 </script>
